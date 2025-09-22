@@ -62,3 +62,4 @@ This is destructive: **use with caution**.
 - Add input validation and escaping everywhere
 - Improve logging and error handling
 - Add HTTPS and admin IP whitelisting
+# host-panel
