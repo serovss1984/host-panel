@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактирование конфига: example.com</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #242424;
+            color: #d8d8d8;
+            min-height: 100vh;
+            background-image: linear-gradient(to bottom, #2e2e2e, #1a1a1a);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #404040;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 28px;
+        }
+        
+        .domain-info {
+            background-color: #303030;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            border: 1px solid #404040;
+            color: #b8b8b8;
+        }
+        
+        .domain-info strong {
+            color: #ffffff;
+        }
+        
+        .config-form {
+            background-color: #303030;
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid #404040;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            margin-bottom: 30px;
+        }
+        
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: #3465a4;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2c5899;
+        }
+        
+        .btn-secondary {
+            background-color: #505050;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a5a5a;
+        }
+        
+        .config-editor {
+            position: relative;
+            margin-bottom: 20px;
+            display: flex;
+            border: 1px solid #454545;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #2a2a2a;
+        }
+        
+        .editor-line-numbers {
+            width: 50px;
+            padding: 15px 5px;
+            background-color: #252525;
+            border-right: 1px solid #404040;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #7a7a7a;
+            overflow: hidden;
+            text-align: right;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        
+        .line-number {
+            height: 21px;
+            display: block;
+        }
+        
+        .editor-content {
+            flex: 1;
+            position: relative;
+            overflow: auto;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 500px;
+            padding: 15px;
+            background-color: #2a2a2a;
+            border: none;
+            color: #e8e8e8;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            tab-size: 4;
+            -moz-tab-size: 4;
+            white-space: pre;
+            overflow-wrap: normal;
+            overflow-x: auto;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        
+        textarea:focus {
+            outline: none;
+        }
+        
+        .editor-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #404040;
+        }
+        
+        .help-text {
+            font-size: 13px;
+            color: #7a7a7a;
+        }
+        
+        .debian-branding {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 12px;
+            color: #7a7a7a;
+        }
+        
+        .debian-logo {
+            color: #d70751;
+            font-weight: bold;
+        }
+        
+        #editorNotification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 4px;
+            color: white;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .editor-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .editor-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .editor-footer {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h2>Редактирование конфигурации</h2>
+            <div class="domain-info">
+                Домен: <strong><%= domain %></strong>
+            </div>
+        </header>
+        
+        <form method="post" action="/sites/edit/<%= domain %>" class="config-form">
+            <div class="editor-header">
+                <h3>Конфигурационный файл</h3>
+                <div class="editor-actions">
+                    <button type="button" class="btn btn-secondary" onclick="formatConfig()">Форматировать</button>
+                    <button type="button" class="btn btn-secondary" onclick="checkConfig()">Проверить синтаксис</button>
+                </div>
+            </div>
+            
+            <div class="config-editor">
+                <div class="editor-line-numbers" id="lineNumbers">
+                    <!-- Номера строк будут добавлены через JavaScript -->
+                </div>
+                <div class="editor-content">
+                    <textarea name="config" id="configTextarea" spellcheck="false" oninput="updateLineNumbers()" onscroll="syncScroll()"><%= conf %></textarea>
+                </div>
+            </div>
+            
+            <div class="editor-footer">
+                <div class="help-text">
+                    Используйте Ctrl+S для сохранения (в некоторых браузерах)
+                </div>
+                <button type="submit" class="btn btn-primary">Сохранить конфигурацию</button>
+            </div>
+        </form>
+        
+        <div class="debian-branding">
+            Powered by <span class="debian-logo">RLK Media</span>
+        </div>
+    </div>
+
+    <div id="editorNotification"></div>
+
+    <script>
+    // Инициализация номеров строк
+    function updateLineNumbers() {
+        const textarea = document.getElementById('configTextarea');
+        const lineNumbers = document.getElementById('lineNumbers');
+        const lines = textarea.value.split('\n').length;
+        
+        // Очищаем текущие номера
+        lineNumbers.innerHTML = '';
+        
+        // Добавляем новые номера
+        for (let i = 1; i <= lines; i++) {
+            const lineNumber = document.createElement('div');
+            lineNumber.className = 'line-number';
+            lineNumber.textContent = i;
+            lineNumbers.appendChild(lineNumber);
+        }
+    }
+    
+    // Синхронизация прокрутки
+    function syncScroll() {
+        const textarea = document.getElementById('configTextarea');
+        const lineNumbers = document.getElementById('lineNumbers');
+        lineNumbers.scrollTop = textarea.scrollTop;
+    }
+    
+    // Форматирование конфигурации
+    function formatConfig() {
+        const textarea = document.getElementById('configTextarea');
+        const lines = textarea.value.split('\n');
+        let formatted = '';
+        let indentLevel = 0;
+        
+        for (let line of lines) {
+            line = line.trim();
+            
+            if (line.endsWith('}') || line.endsWith('};')) {
+                indentLevel = Math.max(0, indentLevel - 1);
+            }
+            
+            if (line) {
+                formatted += '    '.repeat(indentLevel) + line + '\n';
+            } else {
+                formatted += '\n';
+            }
+            
+            if (line.endsWith('{') || line.endsWith('{;')) {
+                indentLevel += 1;
+            }
+        }
+        
+        textarea.value = formatted;
+        updateLineNumbers();
+        
+        // Показать уведомление
+        showNotification('Конфигурация отформатирована', 'success');
+    }
+    
+    // Проверка синтаксиса
+    function checkConfig() {
+        const textarea = document.getElementById('configTextarea');
+        const config = textarea.value;
+        
+        // Простая проверка на сбалансированность скобок
+        const openBraces = (config.match(/{/g) || []).length;
+        const closeBraces = (config.match(/}/g) || []).length;
+        
+        if (openBraces !== closeBraces) {
+            showNotification(`Предупреждение: несбалансированные скобки! {=${openBraces} != }=${closeBraces}`, 'warning');
+        } else {
+            showNotification('Баланс скобок в порядке', 'success');
+        }
+        
+        // Проверка на наличие точки с запятой в конце важных директив
+        const lines = config.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (line && !line.endsWith(';') && !line.endsWith('{') && 
+                !line.startsWith('#') && !line.endsWith('}') && line !== '}') {
+                showNotification(`Строка ${i+1}: отсутствует точка с запятой в конце директивы`, 'warning');
+                break;
+            }
+        }
+    }
+    
+    // Вспомогательная функция для показа уведомлений
+    function showNotification(message, type) {
+        const notification = document.getElementById('editorNotification');
+        
+        // Устанавливаем стили в зависимости от типа
+        if (type === 'success') {
+            notification.style.backgroundColor = '#4caf50';
+        } else if (type === 'warning') {
+            notification.style.backgroundColor = '#ff9800';
+        } else {
+            notification.style.backgroundColor = '#3465a4';
+        }
+        
+        notification.textContent = message;
+        notification.style.opacity = '1';
+        
+        // Автоматическое скрытие через 3 секунды
+        setTimeout(() => {
+            notification.style.opacity = '0';
+        }, 3000);
+    }
+    
+    // Обработка сочетания клавиш Ctrl+S для сохранения
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            document.querySelector('form').submit();
+        }
+    });
+    
+    // Инициализация при загрузке
+    window.onload = function() {
+        updateLineNumbers();
+    };
+    </script>
+</body>
+</html>

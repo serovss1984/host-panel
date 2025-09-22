@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Mini Hosting Panel</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <header>
+    <% if (typeof user !== 'undefined' && user) { %>
+      <div>Привет, <%= user.username %> | <a href="/logout">Выйти</a></div>
+    <% } %>
+  </header>
+  <main>
+    <%- body %>
+  </main>
+  <script src="/js/main.js"></script>
+</body>
+</html>
