@@ -1,7 +1,4 @@
-/* ==================================================================
-   FILE: README.md (instructions and security notes)
-   ================================================================== */
-# Mini Hosting Panel - Skeleton
+# Mini Hosting Panel
 
 This is a minimal skeleton for the "mini-hosting-panel" described in the convo.
 
